@@ -6,7 +6,7 @@ pipeline {
   agent {
     docker {
       image 'maven:3'
-      args '-v ./settings.xml:/root/.m2/settings.xml'
+      args '-v `PWD`/settings.xml:/root/.m2/settings.xml'
     }
   }
   stages {
