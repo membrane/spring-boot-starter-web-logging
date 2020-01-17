@@ -1,5 +1,7 @@
 package de.predic8.weblogger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
@@ -13,8 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.logstash.logback.marker.Markers.appendEntries;
-
 public class LogJsonHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private final Logger log = LoggerFactory.getLogger(LogJsonHandlerInterceptor.class);
@@ -27,7 +27,7 @@ public class LogJsonHandlerInterceptor extends HandlerInterceptorAdapter {
 	}
 
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object o) {
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object o) throws JsonProcessingException {
 
 		RequestContext ctx = new RequestContext();
 
@@ -42,15 +42,13 @@ public class LogJsonHandlerInterceptor extends HandlerInterceptorAdapter {
 		entries.put("path", request.getServletPath());
 
 		System.out.println("entries = " + entries);
-		log.info("{}", entries);
-
-		log.info(appendEntries(entries), "{}");
+		log.info("{}", new ObjectMapper().writeValueAsString(entries));
 
 		return true;
 	}
 
 	@Override
-	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object o, ModelAndView modelAndView) {
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object o, ModelAndView modelAndView) throws JsonProcessingException {
 
 		RequestContext ctx = context.get(Thread.currentThread().getName());
 
@@ -60,10 +58,8 @@ public class LogJsonHandlerInterceptor extends HandlerInterceptorAdapter {
 		entries.put("status_code", response.getStatus());
 
 		System.out.println("entriesPost = " + entries);
-		log.info("{}", entries);
+		log.info("{}", new ObjectMapper().writeValueAsString(entries));
 
-
-		log.info(appendEntries(entries), "{}");
 	}
 
 	class RequestContext {
