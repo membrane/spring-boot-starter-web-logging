@@ -1,26 +1,32 @@
-node {
+pipeline {
 
-    def server = Artifactory.server "Membrane-SOA"
-    server.credentialsId='350ecaca-7d1f-4acf-9602-8791a4a866b6'
-
-    def rtMaven = Artifactory.newMavenBuild()
-    def buildInfo
-
-    stage("Checkout") {
-        git url: "https://github.com/membrane/spring-boot-starter-web-logging.git"
+  environment {
+    NEXUS = credentials('350ecaca-7d1f-4acf-9602-8791a4a866b6')
+  }
+  agent {
+    docker {
+      image 'maven:3'
+      args '-v ./settings.xml:/root/.m2/settings.xml'
     }
-
-    stage("Artifactory configuration") {
-        rtMaven.tool = "mvn3"
-        rtMaven.deployer releaseRepo:'content/repositories/releases', snapshotRepo:'content/repositories/snapshots', server: server
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
-
-    stage('Maven build') {
-        buildInfo = rtMaven.run pom: 'pom.xml', goals: 'clean install'
+    stage('Maven Build') {
+      steps {
+        sh 'sed -i "s/\${nexusUser}/${env.NEXUS_USR}/g" /root/.m2/settings.xml'
+        sh 'sed -i "s/\${nexusPassword}/${env.NEXUS_PSW}/g" /root/.m2/settings.xml'
+	sh 'url="https://repository.membrane-soa.org" && sed -i "s@\${nexusBaseUrl}@$url@g" /root/.m2/settings.xml'
+        sh 'mvn clean install'
+      }
     }
-
-    stage('Publish build info') {
-        server.publishBuildInfo buildInfo
+    stage('Maven Deploy') {
+      steps {
+        sh 'mvn deploy -N -DskipTests -D altDeploymentRepository=snapshots::default::https://repository.membrane-soa.org/content/repositories/snapshots'
+      }
     }
-
+  }
 }
