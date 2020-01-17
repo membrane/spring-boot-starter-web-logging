@@ -1,6 +1,7 @@
 node {
 
-    def server = Artifactory.server "Membrane-SOA", credentialsId: '350ecaca-7d1f-4acf-9602-8791a4a866b6'
+    def server = Artifactory.server "Membrane-SOA"
+    server.credentialsId='350ecaca-7d1f-4acf-9602-8791a4a866b6'
 
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
