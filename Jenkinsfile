@@ -12,7 +12,7 @@ node {
 
     stage("Artifactory configuration") {
         rtMaven.tool = "mvn3"
-        rtMaven.deployer releaseRepo:'releases', snapshotRepo:'snapshots', server: server
+        rtMaven.deployer releaseRepo:'content/repositories/releases', snapshotRepo:'content/repositories/snapshots', server: server
     }
 
     stage('Maven build') {
